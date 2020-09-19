@@ -1,7 +1,7 @@
 # ARwork
 using three.js
 # 0920
-// art hit test 
+// art hit test : https://github.com/ptyoiy/ARwork/blob/master/webxr_ar_hittest.html
 https://threejs.org/examples/#webxr_ar_hittest
 https://github.com/mrdoob/three.js/blob/master/examples/webxr_ar_hittest.html
 
