@@ -1,167 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>three.js ar - hit test</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-		<link type="text/css" rel="stylesheet" href="main.css">
-	</head>
-	<body>
 
-		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> ar - hit test<br/>(Chrome Android 81+)
-		</div>
+<head>
+	<title>three.js ar - hit test</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<link type="text/css" rel="stylesheet" href="main.css">
+</head>
 
-		<script type="module">
+<body>
 
-			import * as THREE from '../build/three.module.js';
-			import { ARButton } from './jsm/webxr/ARButton.js';
+	<div id="info">
+		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> ar - hit test<br />(Chrome Android
+		81+)
+	</div>
 
-			var container;
-			var camera, scene, renderer;
-			var controller;
+	<script type="module">
+		// https://immersive-web.github.io/webxr-samples/ 사용법 예제들 #필수참조#
+		import * as THREE from '../build/three.module.js'; // Three.js 사용
+		import { ARButton } from './jsm/webxr/ARButton.js'; // WebXR 필수 1
 
-			var reticle;
+		// 변수 설정
+		var container; // html에 추가할 코드를 담을 변수
+		var camera, scene, renderer; // three.js 1단계 변수
+		var controller; // 추가한 객체 그룹(원통 배열) 관리
 
-			var hitTestSource = null;
-			var hitTestSourceRequested = false;
+		var reticle; // '원판'이라는 뜻 => 화면 중앙에 뜨는 생성 원
 
-			init();
-			animate();
+		var hitTestSource = null;
+		var hitTestSourceRequested = false;
 
-			function init() {
+		init(); // 초기설정 : html태그 추가 -> 씬,카메라,광원,렌더러 추가 -> 메쉬구성(원통,원판), 추가 ->
+		animate(); // 설정 후 애니메이션 실행(루프)
 
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
+		function init() {
+			// <div class="container"> 생성 -> html에 무언가 그려낼 공간 생성
+			container = document.createElement('div');
+			document.body.appendChild(container);
+			// 2단계/씬+카메라
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+			// 2단계/빛(흰색)
+			var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+			light.position.set(0.5, 1, 0.25);
+			scene.add(light);
 
-				scene = new THREE.Scene();
+			// 1단계/렌더러
+			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+			renderer.setPixelRatio(window.devicePixelRatio); // 픽셀 갯수 자동
+			renderer.setSize(window.innerWidth, window.innerHeight); // 창 크기에 맞게
+			renderer.xr.enabled = true; // WebXR 필수 3
+			container.appendChild(renderer.domElement); // 첫 단락에서 만든 <div class="container"> 에 1단계/렌더러에서 만든 renderer내용 추가
 
-				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
+			// WebXR 필수 2				
+			document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
-				var light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
-				light.position.set( 0.5, 1, 0.25 );
-				scene.add( light );
+			// 3단계/지오메트리 : https://threejs.org/docs/#api/en/geometries/CylinderBufferGeometry (원통 모양)
+			var geometry = new THREE.CylinderBufferGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
 
-				//
+			// 터치시 나오게 할 원통 설정
+			function onSelect() {
 
-				renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.xr.enabled = true;
-				container.appendChild( renderer.domElement );
+				if (reticle.visible) { // 생성 원이 보일때만 생성
 
-				//
-
-				document.body.appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
-
-				//
-
-				var geometry = new THREE.CylinderBufferGeometry( 0.1, 0.1, 0.2, 32 ).translate( 0, 0.1, 0 );
-
-				function onSelect() {
-
-					if ( reticle.visible ) {
-
-						var material = new THREE.MeshPhongMaterial( { color: 0xffffff * Math.random() } );
-						var mesh = new THREE.Mesh( geometry, material );
-						mesh.position.setFromMatrixPosition( reticle.matrix );
-						mesh.scale.y = Math.random() * 2 + 1;
-						scene.add( mesh );
-
-					}
+					var material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
+					var mesh = new THREE.Mesh(geometry, material);
+					mesh.position.setFromMatrixPosition(reticle.matrix); // 생성 원의 위치
+					mesh.scale.y = Math.random() * 2 + 1; // 크기 랜덤
+					scene.add(mesh); // 원통 추가
 
 				}
 
-				controller = renderer.xr.getController( 0 );
-				controller.addEventListener( 'select', onSelect );
-				scene.add( controller );
-
-				reticle = new THREE.Mesh(
-					new THREE.RingBufferGeometry( 0.15, 0.2, 32 ).rotateX( - Math.PI / 2 ),
-					new THREE.MeshBasicMaterial()
-				);
-				reticle.matrixAutoUpdate = false;
-				reticle.visible = false;
-				scene.add( reticle );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
 			}
 
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
+			controller = renderer.xr.getController(0); // 그룹(Mesh배열)을 리턴, 0번 인덱스 그룹을 리턴
+			controller.addEventListener('select', onSelect);
+			scene.add(controller); // 원통 배열 추가
+			// 생성 원 설정
+			reticle = new THREE.Mesh(
+				new THREE.RingBufferGeometry(0.15, 0.2, 32).rotateX(- Math.PI / 2),
+				new THREE.MeshBasicMaterial() // 흰색, 원판 모양
+			);
+			reticle.matrixAutoUpdate = false; // 위치가 동적으로 변하게 하려면 true, 고정시키거나 원하는 위치가 있다면 false
+			reticle.visible = false; // 안보이게
+			scene.add(reticle); // 생성 원 추가
 
 			//
 
-			function animate() {
+			window.addEventListener('resize', onWindowResize, false); // 화면크기변화에 반응
+		}
+		// 화면크기변화에 반응
+		function onWindowResize() {
 
-				renderer.setAnimationLoop( render );
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
 
-			}
+			renderer.setSize(window.innerWidth, window.innerHeight);
 
-			function render( timestamp, frame ) {
+		}
 
-				if ( frame ) {
+		// 애니메이션
+		function animate() {
 
-					var referenceSpace = renderer.xr.getReferenceSpace();
-					var session = renderer.xr.getSession();
+			renderer.setAnimationLoop(render); //WebXR 필수 4(끝)
 
-					if ( hitTestSourceRequested === false ) {
+		}
+		/*
+		- WebXR 기본 App동작 프로세스
 
-						session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
+		1) XR Device 요청
+		2) Device 사용 가능한 경우 XR Session 요청. 폰이 헤드셋이 된 경우 immersive session이라 불리며 사용자의 gesture가 들어간다.
+		3) Rendering Loop를 실행하기 위해 Session을 사용 (60fps). 각 프레임마다 해당하는 내용물을 그림
+		4) Rendering Loop를 실행 (사용자 종료까지)
+		5) XR Session 종료
+		
+		- Interaction
+		
+		"Point and Click" (가르키고, 선택)
+		
+		=> pointer ray : Input Device가 가리키는 "위치"와 무언가 선택하는 "이벤트"를 감지하기 위해 정의.
+		가리키는 곳을 pointer ray가 그리고 보여준다.
+		클릭하면 이벤트 발생 : select, selectStart, selectEnd..
+		*/
 
-							session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+		// 애니메이션 구성 (scene, camera)
+		function render(timestamp, frame) {
 
-								hitTestSource = source;
+			if (frame) {
 
-							} );
+				var referenceSpace = renderer.xr.getReferenceSpace();
+				var session = renderer.xr.getSession();
 
-						} );
+				if (hitTestSourceRequested === false) { // 참조공간 설정 초기화
 
-						session.addEventListener( 'end', function () {
+					session.requestReferenceSpace('viewer').then(function (referenceSpace) {
+						// https://zeddios.tistory.com/536 hittest에 대한 대략적인 설명
+						// https://immersive-web.github.io/hit-test/ 코드 설명서
+						session.requestHitTestSource({ space: referenceSpace }).then(function (source) {
 
-							hitTestSourceRequested = false;
-							hitTestSource = null;
+							hitTestSource = source;
 
-						} );
+						});
 
-						hitTestSourceRequested = true;
+					});
 
+					session.addEventListener('end', function () {
+
+						hitTestSourceRequested = false;
+						hitTestSource = null;
+
+					});
+
+					hitTestSourceRequested = true;
+
+				} // 공간 설정 초기화 완료
+
+				if (hitTestSource) {
+
+					var hitTestResults = frame.getHitTestResults(hitTestSource);
+
+					if (hitTestResults.length) {
+
+						var hit = hitTestResults[0];
+
+						reticle.visible = true;
+						reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+					} else {
+						reticle.visible = false;
 					}
-
-					if ( hitTestSource ) {
-
-						var hitTestResults = frame.getHitTestResults( hitTestSource );
-
-						if ( hitTestResults.length ) {
-
-							var hit = hitTestResults[ 0 ];
-
-							reticle.visible = true;
-							reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
-
-						} else {
-
-							reticle.visible = false;
-
-						}
-
-					}
-
 				}
-
-				renderer.render( scene, camera );
-
 			}
-
-		</script>
-	</body>
+			renderer.render(scene, camera);
+		}
+	</script>
+</body>
 </html>
