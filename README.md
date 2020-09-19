@@ -77,3 +77,4 @@ https://stemkoski.github.io/Three.js/
 //모델
 https://github.com/stemkoski/stemkoski.github.com/blob/master/Three.js/Model.html
 
+작업자: 이호준, 곽규한 
