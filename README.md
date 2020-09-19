@@ -1,5 +1,9 @@
 # ARwork
 using three.js
+# 0920
+// art hit test 
+https://threejs.org/examples/#webxr_ar_hittest
+https://github.com/mrdoob/three.js/blob/master/examples/webxr_ar_hittest.html
 
 //물체
 
@@ -66,11 +70,6 @@ https://github.com/mrdoob/three.js/blob/master/examples/webgl_shadowmap.html
 https://threejs.org/examples/#webgl_shadowmap_performance
 https://github.com/mrdoob/three.js/blob/master/examples/webgl_shadowmap_performance.html
 
-## 0920 #######
-// art hit test 
-https://threejs.org/examples/#webxr_ar_hittest
-https://github.com/mrdoob/three.js/blob/master/examples/webxr_ar_hittest.html
-################
 //단계별 실습 튜토리얼
 https://stemkoski.github.io/Three.js/
 //모델
