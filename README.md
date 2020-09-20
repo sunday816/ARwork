@@ -8,6 +8,8 @@ https://threejs.org/examples/#webxr_ar_hittest
 https://github.com/mrdoob/three.js/blob/master/examples/webxr_ar_hittest.html
 @
 # 남은 내용
+// hit test 다른버전
+https://github.com/ptyoiy/ARwork/blob/master/hit-test.html
 //물체
 
 //https://threejs.org/examples/#webgl_interactive_voxelpainter //
