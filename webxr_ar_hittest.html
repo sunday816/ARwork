@@ -134,8 +134,9 @@
 				if (hitTestSourceRequested === false) { // 참조공간 설정 초기화
 
 					session.requestReferenceSpace('viewer').then(function (referenceSpace) {
-						// https://zeddios.tistory.com/536 hittest에 대한 대략적인 설명
-						// https://immersive-web.github.io/hit-test/ 코드 설명서
+						// https://zeddios.tistory.com/536   hittest에 대한 대략적인 설명
+						// https://immersive-web.github.io/hit-test/   원본?설명서
+                                                // https://github.com/immersive-web/hit-test/blob/master/hit-testing-explainer.md  js버전 설명서
 						session.requestHitTestSource({ space: referenceSpace }).then(function (source) {
 
 							hitTestSource = source;
